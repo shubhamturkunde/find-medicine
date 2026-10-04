@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Medicine Intake Schedule & Timing Finder (React + MongoDB)",
   "scripts": {
+    "build": "cd frontend && npm install && npm run build",
     "start:backend": "cd backend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "seed": "cd backend && npm run seed",
