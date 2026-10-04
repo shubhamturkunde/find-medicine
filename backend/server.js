@@ -20,20 +20,25 @@ app.use(cors({
 
 app.use(express.json());
 
-// Database connection middleware for serverless execution
+// Database connection middleware with enhanced diagnostics
 app.use(async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (err) {
     res.status(500).json({
-      message: 'Database connection failed. Please verify MONGODB_URI environment variable and MongoDB Atlas Network Access rules.'
+      message: 'Database connection failed',
+      error: err.message,
+      hasMongodbUri: !!process.env.MONGODB_URI,
+      hint: !process.env.MONGODB_URI 
+        ? 'MONGODB_URI is missing in Vercel Environment Variables.' 
+        : 'Please verify IP 0.0.0.0/0 is whitelisted in MongoDB Atlas Network Access.'
     });
   }
 });
 
-// Optional Seed endpoint helper for initial database population
-app.get(['/api/seed', '/seed'], async (req, res) => {
+// Seed endpoint handler
+const handleSeedRequest = async (req, res) => {
   try {
     await connectDB();
     const count = await Medicine.countDocuments();
@@ -83,7 +88,10 @@ app.get(['/api/seed', '/seed'], async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+
+app.get('/api/seed', handleSeedRequest);
+app.get('/seed', handleSeedRequest);
 
 // API Routes
 app.use('/api/medicines', medicineRoutes);
