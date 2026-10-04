@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+// Use production Vercel backend URL as default or custom VITE_API_URL if set
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://find-medicine-mjp8.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

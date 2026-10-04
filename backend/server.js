@@ -11,9 +11,23 @@ dotenv.config();
 
 const app = express();
 
-// Connect to MongoDB
-connectDB().then(async () => {
-  // Auto-seed if database is completely empty
+// Middleware
+app.use(cors({
+  origin: '*', // Allow Vercel frontend and local development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json());
+
+// Database connection middleware for serverless execution
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
+// Seed helper logic if DB is empty
+const autoSeedIfEmpty = async () => {
   try {
     const count = await Medicine.countDocuments();
     if (count === 0) {
@@ -104,23 +118,35 @@ connectDB().then(async () => {
   } catch (err) {
     console.error('Auto-seed check failed:', err);
   }
+};
+
+// Auto-seed endpoint trigger
+app.get('/api/seed', async (req, res) => {
+  try {
+    await connectDB();
+    await autoSeedIfEmpty();
+    res.json({ message: 'Seed operation completed successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Routes
+// API Routes
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/auth', authRoutes);
 
-// Root Health Endpoint
+// Root Endpoint
 app.get('/', (req, res) => {
   res.send('Find Medicine API Server is running');
 });
 
+// Port listener for traditional server (local execution)
 const PORT = process.env.PORT || 5000;
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Export Express app for Vercel serverless execution
+module.exports = app;
