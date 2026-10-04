@@ -22,16 +22,22 @@ app.use(express.json());
 
 // Database connection middleware for serverless execution
 app.use(async (req, res, next) => {
-  await connectDB();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({
+      message: 'Database connection failed. Please verify MONGODB_URI environment variable and MongoDB Atlas Network Access rules.'
+    });
+  }
 });
 
-// Seed helper logic
-const autoSeedIfEmpty = async () => {
+// Optional Seed endpoint helper for initial database population
+app.get(['/api/seed', '/seed'], async (req, res) => {
   try {
+    await connectDB();
     const count = await Medicine.countDocuments();
     if (count === 0) {
-      console.log('No medicines found in DB. Auto-seeding initial data...');
       const demoPharmacist = await Pharmacist.create({
         name: 'Dr. Ramesh Sharma',
         email: 'pharmacist@example.com',
@@ -69,79 +75,24 @@ const autoSeedIfEmpty = async () => {
           storageInfo: 'Keep in cool dry place.',
           pharmacist: demoPharmacist._id,
           pharmacyName: demoPharmacist.pharmacyName
-        },
-        {
-          name: 'Metformin 500mg (Glycomet)',
-          genericName: 'Metformin Hydrochloride',
-          category: 'Anti-Diabetic',
-          dosage: '1 Tablet (500mg)',
-          timings: { morning: true, afternoon: false, evening: false, night: true },
-          mealTiming: 'With Food',
-          specificInstructions: 'Take 1 tablet right AFTER breakfast and 1 tablet right AFTER dinner to avoid stomach upset.',
-          purpose: 'Blood sugar control for Type 2 Diabetes.',
-          sideEffects: 'Mild stomach discomfort in initial days.',
-          storageInfo: 'Store at room temperature.',
-          pharmacist: demoPharmacist._id,
-          pharmacyName: demoPharmacist.pharmacyName
-        },
-        {
-          name: 'Amoxicillin 500mg (Mox 500)',
-          genericName: 'Amoxicillin Trihydrate',
-          category: 'Antibiotic',
-          dosage: '1 Capsule (500mg)',
-          timings: { morning: true, afternoon: true, evening: false, night: true },
-          mealTiming: 'After Meal',
-          specificInstructions: 'Take every 8 hours after food for 5 full days without skipping doses.',
-          purpose: 'Bacterial throat infections, ear infections, and chest infections.',
-          sideEffects: 'Mild diarrhea or skin rash.',
-          storageInfo: 'Store in airtight container.',
-          pharmacist: demoPharmacist._id,
-          pharmacyName: demoPharmacist.pharmacyName
-        },
-        {
-          name: 'Cetirizine 10mg (Cetzine)',
-          genericName: 'Cetirizine Hydrochloride',
-          category: 'Antihistamine / Anti-Allergy',
-          dosage: '1 Tablet (10mg)',
-          timings: { morning: false, afternoon: false, evening: false, night: true },
-          mealTiming: 'After Meal',
-          specificInstructions: 'Take 1 tablet at night before sleeping after dinner. May cause drowsiness.',
-          purpose: 'Running nose, sneezing, skin allergy, and cold symptoms.',
-          sideEffects: 'Drowsiness, dry mouth.',
-          storageInfo: 'Keep away from moisture.',
-          pharmacist: demoPharmacist._id,
-          pharmacyName: demoPharmacist.pharmacyName
         }
       ]);
-      console.log('Auto-seeding complete!');
+      return res.json({ message: 'Seed operation completed successfully' });
     }
-  } catch (err) {
-    console.error('Auto-seed check failed:', err);
-  }
-};
-
-// Seed endpoint handlers
-const handleSeedRequest = async (req, res) => {
-  try {
-    await connectDB();
-    await autoSeedIfEmpty();
-    res.json({ message: 'Seed operation completed successfully' });
+    res.json({ message: 'Database already has records', count });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};
+});
 
-app.get('/api/seed', handleSeedRequest);
-app.get('/seed', handleSeedRequest);
-
-// Mount API routes for both /api/* and direct /* paths to guarantee 100% route matching on Vercel
+// API Routes
 app.use('/api/medicines', medicineRoutes);
 app.use('/medicines', medicineRoutes);
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
 
-// Root Health Check Endpoints
+// Root Endpoints
 app.get('/api', (req, res) => res.json({ message: 'Find Medicine API is active' }));
 app.get('/', (req, res) => res.send('Find Medicine API Server is running'));
 
