@@ -93,14 +93,18 @@ const handleSeedRequest = async (req, res) => {
 app.get('/api/seed', handleSeedRequest);
 app.get('/seed', handleSeedRequest);
 
-// API Routes
+// Mount routes on all path variations for 100% Vercel route matching
 app.use('/api/medicines', medicineRoutes);
 app.use('/medicines', medicineRoutes);
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
 
-// Root Endpoints
+// Fallback mounts for Vercel path rewrites
+app.use('/api', medicineRoutes);
+app.use('/api', authRoutes);
+
+// Health Check Endpoints
 app.get('/api', (req, res) => res.json({ message: 'Find Medicine API is active' }));
 app.get('/', (req, res) => res.send('Find Medicine API Server is running'));
 
