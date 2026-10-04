@@ -13,7 +13,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: '*', // Allow Vercel frontend and local development
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -26,7 +26,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Seed helper logic if DB is empty
+// Seed helper logic
 const autoSeedIfEmpty = async () => {
   try {
     const count = await Medicine.countDocuments();
@@ -120,8 +120,8 @@ const autoSeedIfEmpty = async () => {
   }
 };
 
-// Auto-seed endpoint trigger
-app.get('/api/seed', async (req, res) => {
+// Seed endpoint handlers
+const handleSeedRequest = async (req, res) => {
   try {
     await connectDB();
     await autoSeedIfEmpty();
@@ -129,18 +129,23 @@ app.get('/api/seed', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
 
-// API Routes
+app.get('/api/seed', handleSeedRequest);
+app.get('/seed', handleSeedRequest);
+
+// Mount API routes for both /api/* and direct /* paths to guarantee 100% route matching on Vercel
 app.use('/api/medicines', medicineRoutes);
+app.use('/medicines', medicineRoutes);
+
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 
-// Root Endpoint
-app.get('/', (req, res) => {
-  res.send('Find Medicine API Server is running');
-});
+// Root Health Check Endpoints
+app.get('/api', (req, res) => res.json({ message: 'Find Medicine API is active' }));
+app.get('/', (req, res) => res.send('Find Medicine API Server is running'));
 
-// Port listener for traditional server (local execution)
+// Port listener for local execution
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.listen(PORT, () => {
@@ -148,5 +153,4 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   });
 }
 
-// Export Express app for Vercel serverless execution
 module.exports = app;
