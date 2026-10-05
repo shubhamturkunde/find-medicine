@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Dynamically target backend API: local proxy (/api) in development vs backend Vercel URL in production
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? '/api' : 'https://find-medicine-mjp8-jfo2pzt1l-shubhamteam3.vercel.app/api');
+  (import.meta.env.DEV ? '/api' : 'https://find-medicine-mjp8.vercel.app/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
