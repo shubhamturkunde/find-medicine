@@ -50,15 +50,6 @@ export default function PharmacistLoginPage() {
           </p>
         </div>
 
-        {/* Demo Credentials Alert Box */}
-        <div className="bg-sky-50 border border-sky-200/80 rounded-2xl p-3.5 mb-6 text-xs text-sky-900">
-          <p className="font-bold text-sky-950 mb-1 flex items-center gap-1">
-            <span>🔑 Quick Demo Credentials:</span>
-          </p>
-          <p><strong>Email:</strong> <code className="bg-white px-1.5 py-0.5 rounded border border-sky-200">pharmacist@example.com</code></p>
-          <p className="mt-0.5"><strong>Password:</strong> <code className="bg-white px-1.5 py-0.5 rounded border border-sky-200">password123</code></p>
-        </div>
-
         {error && (
           <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -77,7 +68,7 @@ export default function PharmacistLoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="pharmacist@example.com"
+                placeholder="pharmacist@pharmacy.com"
                 className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all font-medium"
                 required
               />
